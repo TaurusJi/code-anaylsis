@@ -25,11 +25,13 @@ export function validateProp (
   vm?: Component
 ): any {
   const prop = propOptions[key]
+  // 声明的prop字段是否传入了组件，没传入就是false
   const absent = !hasOwn(propsData, key)
   let value = propsData[key]
   // boolean casting
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   if (booleanIndex > -1) {
+    // 布尔prop如果没有default且没传prop值，就返回false
     if (absent && !hasOwn(prop, 'default')) {
       value = false
     } else if (value === '' || value === hyphenate(key)) {
@@ -42,6 +44,7 @@ export function validateProp (
     }
   }
   // check default value
+  // 对默认值做observe操作
   if (value === undefined) {
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,
@@ -56,6 +59,7 @@ export function validateProp (
     // skip validation for weex recycle-list child component props
     !(__WEEX__ && isObject(value) && ('@binding' in value))
   ) {
+    // 里面会有prop校验失败时打印log的逻辑
     assertProp(prop, key, value, vm, absent)
   }
   return value
@@ -63,9 +67,11 @@ export function validateProp (
 
 /**
  * Get the default value of a prop.
+ * 顾名思义了，就是获取default的值
  */
 function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): any {
   // no default, return undefined
+  // 没定义就返回undefined
   if (!hasOwn(prop, 'default')) {
     return undefined
   }
@@ -89,6 +95,7 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
   }
   // call factory function for non-Function types
   // a value is Function if its prototype is function even across different execution context
+  // default可以是一个函数，如果type不是函数类型就执行它把结果作为default
   return typeof def === 'function' && getType(prop.type) !== 'Function'
     ? def.call(vm)
     : def
@@ -96,6 +103,7 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
 
 /**
  * Assert whether a prop is valid.
+ * prop校验机制
  */
 function assertProp (
   prop: PropOptions,
@@ -150,6 +158,7 @@ function assertProp (
 
 const simpleCheckRE = /^(String|Number|Boolean|Function|Symbol)$/
 
+// type和值类型判断逻辑
 function assertType (value: any, type: Function): {
   valid: boolean;
   expectedType: string;
@@ -181,6 +190,7 @@ function assertType (value: any, type: Function): {
  * because a simple equality check will fail when running
  * across different vms / iframes.
  */
+// 这里似乎是iframe中判断类型会有bug,所以做了特殊处理
 function getType (fn) {
   const match = fn && fn.toString().match(/^\s*function (\w+)/)
   return match ? match[1] : ''
@@ -190,6 +200,7 @@ function isSameType (a, b) {
   return getType(a) === getType(b)
 }
 
+// 获取类型下标，type是可以传数组的，也就是prop是支持多个类型校验的
 function getTypeIndex (type, expectedTypes): number {
   if (!Array.isArray(expectedTypes)) {
     return isSameType(expectedTypes, type) ? 0 : -1

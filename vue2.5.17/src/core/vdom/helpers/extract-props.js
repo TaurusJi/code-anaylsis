@@ -25,6 +25,7 @@ export function extractPropsFromVNodeData (
   const { attrs, props } = data
   if (isDef(attrs) || isDef(props)) {
     for (const key in propOptions) {
+      // 开发环境会检查是否为驼峰或者横线连接命名方式
       const altKey = hyphenate(key)
       if (process.env.NODE_ENV !== 'production') {
         const keyInLowerCase = key.toLowerCase()
@@ -42,6 +43,7 @@ export function extractPropsFromVNodeData (
           )
         }
       }
+      // 这俩的作用是检测props里有没有和attr相同的key，有就优先用props里的，然后把attr里的删了。
       checkProp(res, props, key, altKey, true) ||
       checkProp(res, attrs, key, altKey, false)
     }

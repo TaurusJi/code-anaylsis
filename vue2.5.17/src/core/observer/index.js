@@ -22,7 +22,8 @@ const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
  * In some cases we may want to disable observation inside a component's
  * update computation.
  */
-export let shouldObserve: boolean = true
+export let
+  shouldObserve: boolean = true
 
 export function toggleObserving (value: boolean) {
   shouldObserve = value

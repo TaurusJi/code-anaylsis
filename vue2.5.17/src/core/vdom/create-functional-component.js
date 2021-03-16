@@ -16,6 +16,7 @@ import {
   validateProp
 } from '../util/index'
 
+// 在服务端渲染时会用得到
 export function FunctionalRenderContext (
   data: VNodeData,
   props: Object,

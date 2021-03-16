@@ -8,6 +8,7 @@ export let tip = noop
 export let generateComponentTrace = (noop: any) // work around flow check
 export let formatComponentName = (noop: any)
 
+// 开发环境定义的log
 if (process.env.NODE_ENV !== 'production') {
   const hasConsole = typeof console !== 'undefined'
   const classifyRE = /(?:^|[-_])(\w)/g
@@ -55,6 +56,7 @@ if (process.env.NODE_ENV !== 'production') {
     )
   }
 
+  // 只是用来循环拼接字符串，n是重复拼接的次数
   const repeat = (str, n) => {
     let res = ''
     while (n) {
@@ -65,6 +67,7 @@ if (process.env.NODE_ENV !== 'production') {
     return res
   }
 
+  // while迭代通过$parent向上查找得到组件栈，然后用map格式化成字符串返回
   generateComponentTrace = vm => {
     if (vm._isVue && vm.$parent) {
       const tree = []

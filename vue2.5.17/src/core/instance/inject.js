@@ -7,6 +7,8 @@ import { defineReactive, toggleObserving } from '../observer/index'
 export function initProvide (vm: Component) {
   const provide = vm.$options.provide
   if (provide) {
+    // 下面resolveInject方法里会用到_provided这个字段
+    // 是方法的话，会做当前vue组件实例的上下文绑定
     vm._provided = typeof provide === 'function'
       ? provide.call(vm)
       : provide
@@ -14,6 +16,7 @@ export function initProvide (vm: Component) {
 }
 
 export function initInjections (vm: Component) {
+  // 得到用户定义的provider
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
     toggleObserving(false)
@@ -29,6 +32,7 @@ export function initInjections (vm: Component) {
           )
         })
       } else {
+        // 为provide里的属性打上响应式
         defineReactive(vm, key, result[key])
       }
     })
@@ -36,6 +40,7 @@ export function initInjections (vm: Component) {
   }
 }
 
+// 通过inject里提供的provide名 递归向上查找同名的provider，最后返回result
 export function resolveInject (inject: any, vm: Component): ?Object {
   if (inject) {
     // inject is :any because flow is not smart enough to figure out cached
@@ -53,6 +58,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
       let source = vm
       while (source) {
         if (source._provided && hasOwn(source._provided, provideKey)) {
+          // initProvide里定义了_provided
           result[key] = source._provided[provideKey]
           break
         }

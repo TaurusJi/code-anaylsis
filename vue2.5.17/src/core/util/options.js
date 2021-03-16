@@ -45,6 +45,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 /**
  * Helper that recursively merges two data objects together.
+ * 对象合并，属性也是对象会做递归操作
  */
 function mergeData (to: Object, from: ?Object): Object {
   if (!from) return to
@@ -54,6 +55,7 @@ function mergeData (to: Object, from: ?Object): Object {
     key = keys[i]
     toVal = to[key]
     fromVal = from[key]
+    // to里没有这个key, 就把from里的添加到to里
     if (!hasOwn(to, key)) {
       set(to, key, fromVal)
     } else if (isPlainObject(toVal) && isPlainObject(fromVal)) {
@@ -65,6 +67,7 @@ function mergeData (to: Object, from: ?Object): Object {
 
 /**
  * Data
+ * // data的合并策略
  */
 export function mergeDataOrFn (
   parentVal: any,
@@ -73,6 +76,7 @@ export function mergeDataOrFn (
 ): ?Function {
   if (!vm) {
     // in a Vue.extend merge, both should be functions
+    // 有一方存在就直接返回
     if (!childVal) {
       return parentVal
     }
@@ -84,6 +88,7 @@ export function mergeDataOrFn (
     // merged result of both functions... no need to
     // check if parentVal is a function here because
     // it has to be a function to pass previous merges.
+    // 都存在就调用函数得到结果后合并
     return function mergedDataFn () {
       return mergeData(
         typeof childVal === 'function' ? childVal.call(this, this) : childVal,
@@ -108,6 +113,11 @@ export function mergeDataOrFn (
   }
 }
 
+// 这里定义了data如果不是function的报错信息
+// 这个合并对象的方法是个函数，是因为data里属性可以被指向prop或者provide
+// 也就是说prop,的provide定义的优先级比data要高，所以做成函数是为了延迟执行
+// vm只有在走new操作服实例化时才存在，其余子组件都是走extends实例化不会传第三个参数，具体请查看调用栈
+// 这篇文章讲的不错 https://blog.csdn.net/nicexibeidage/article/details/81976235
 strats.data = function (
   parentVal: any,
   childVal: any,
@@ -182,6 +192,7 @@ ASSET_TYPES.forEach(function (type) {
  *
  * Watchers hashes should not overwrite one
  * another, so we merge them as arrays.
+ * watch合并策略
  */
 strats.watch = function (
   parentVal: ?Object,
@@ -197,12 +208,15 @@ strats.watch = function (
   if (process.env.NODE_ENV !== 'production') {
     assertObjectType(key, childVal, vm)
   }
+  // 合并逻辑主要从这里开始
   if (!parentVal) return childVal
   const ret = {}
   extend(ret, parentVal)
   for (const key in childVal) {
     let parent = ret[key]
     const child = childVal[key]
+    // 如果parent也有相同watch，parent里的并不会被替换
+    // 而是会保留parent和child里的，他们会被合并在一个数组里返回
     if (parent && !Array.isArray(parent)) {
       parent = [parent]
     }
@@ -215,6 +229,8 @@ strats.watch = function (
 
 /**
  * Other object hashes.
+ * props, methods, inject computed合并策略，没啥好说的
+ * parent不存在就直接返回child，存在就合并
  */
 strats.props =
 strats.methods =
@@ -234,10 +250,12 @@ strats.computed = function (
   if (childVal) extend(ret, childVal)
   return ret
 }
+// provide 合并策略用的mergeDataOrFn
 strats.provide = mergeDataOrFn
 
 /**
  * Default strategy.
+ * 默认合并策略
  */
 const defaultStrat = function (parentVal: any, childVal: any): any {
   return childVal === undefined
@@ -254,6 +272,8 @@ function checkComponents (options: Object) {
   }
 }
 
+
+// 组件名是否合法报错信息，如果和原生html标签冲突，也会报错
 export function validateComponentName (name: string) {
   if (!/^[a-zA-Z][\w-]*$/.test(name)) {
     warn(
@@ -311,6 +331,7 @@ function normalizeProps (options: Object, vm: ?Component) {
 
 /**
  * Normalize all injections into Object-based format
+ * inject字段标准化
  */
 function normalizeInject (options: Object, vm: ?Component) {
   const inject = options.inject
@@ -338,6 +359,7 @@ function normalizeInject (options: Object, vm: ?Component) {
 
 /**
  * Normalize raw function directives into object format.
+ * 指令标准化，如果是函数类型会做格式化
  */
 function normalizeDirectives (options: Object) {
   const dirs = options.directives

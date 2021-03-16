@@ -16,6 +16,7 @@ export const isIOS = (UA && /iphone|ipad|ipod|ios/.test(UA)) || (weexPlatform ==
 export const isChrome = UA && /chrome\/\d+/.test(UA) && !isEdge
 
 // Firefox has a "watch" function on Object.prototype...
+// FF浏览器里的对象原型上竟然有个watch属性...
 export const nativeWatch = ({}).watch
 
 export let supportsPassive = false
@@ -34,6 +35,7 @@ if (inBrowser) {
 
 // this needs to be lazy-evaled because vue may be required before
 // vue-server-renderer can set VUE_ENV
+// ssr有关的判断
 let _isServer
 export const isServerRendering = () => {
   if (_isServer === undefined) {
@@ -57,10 +59,12 @@ export function isNative (Ctor: any): boolean {
   return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
 }
 
+// 判断是否支持Symbol和Reflect
 export const hasSymbol =
   typeof Symbol !== 'undefined' && isNative(Symbol) &&
   typeof Reflect !== 'undefined' && isNative(Reflect.ownKeys)
 
+// 实现了Set类型，因为用的对象所以只支持string和number的key
 let _Set
 /* istanbul ignore if */ // $flow-disable-line
 if (typeof Set !== 'undefined' && isNative(Set)) {

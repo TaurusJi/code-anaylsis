@@ -2,6 +2,7 @@
 
 /**
  * Check if a string starts with $ or _
+ * //不能有$ _
  */
 export function isReserved (str: string): boolean {
   const c = (str + '').charCodeAt(0)
@@ -10,6 +11,7 @@ export function isReserved (str: string): boolean {
 
 /**
  * Define a property.
+ * 封装了defineProperty
  */
 export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
   Object.defineProperty(obj, key, {
@@ -22,6 +24,7 @@ export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
 
 /**
  * Parse simple path.
+ * 和lodash的get方法如出一辙，通过字符串深度取值
  */
 const bailRE = /[^\w.$]/
 export function parsePath (path: string): any {
@@ -30,6 +33,7 @@ export function parsePath (path: string): any {
   }
   const segments = path.split('.')
   return function (obj) {
+    // 循环取值，取到undefined了就直接return obj
     for (let i = 0; i < segments.length; i++) {
       if (!obj) return
       obj = obj[segments[i]]
